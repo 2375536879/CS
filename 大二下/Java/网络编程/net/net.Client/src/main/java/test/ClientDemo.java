@@ -1,4 +1,4 @@
-package main.java;
+package main.java.test;
 
 import java.io.IOException;
 import java.io.OutputStream;
