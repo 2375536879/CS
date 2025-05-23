@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/net.iml" filepath="$PROJECT_DIR$/.idea/net.iml" />
+      <module fileurl="file://$PROJECT_DIR$/net.Client/net.Client.iml" filepath="$PROJECT_DIR$/net.Client/net.Client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/net.Server/net.Server.iml" filepath="$PROJECT_DIR$/net.Server/net.Server.iml" />
+    </modules>
+  </component>
+</project>
