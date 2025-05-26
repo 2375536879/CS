@@ -11,7 +11,7 @@ import java.net.Socket;
  */
 public class ClientDemo {
 
-     private static final String HOST ="192.168.8.32";
+     private static final String HOST ="127.0.0.1";
      private static final int PORT=9527;
      private Socket socket;
 
@@ -55,43 +55,13 @@ public class ClientDemo {
         BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
         String line="";
         try {
-           // System.out.println("客户端:");
+            System.out.println("请输入发送内容:");
            line=br.readLine();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return line;
     }
-
-
-    //读消息
-    public String readMessage(){
-        String line=null;
-        try {
-            BufferedReader br =new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            line=br.readLine();
-
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return line;
-    }
-
-    //循环接受消息
-    public void receiveMessage(){
-        while(true){
-
-            String message=   readMessage();
-            if(message!=null){
-                System.out.println(socket.getInetAddress()+":"+message);
-            }
-
-        }
-    }
-
-
-
 
     //关闭socket
     public void close(){
