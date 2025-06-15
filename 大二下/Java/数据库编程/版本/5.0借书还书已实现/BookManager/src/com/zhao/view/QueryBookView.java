@@ -76,6 +76,9 @@ public class QueryBookView extends JFrame {
 
         this.add(northPanel, BorderLayout.NORTH);
 
+
+
+
         // 中间面板 - 查询结果表格
         String[] columnNames = {"ISBN", "标题", "作者", "出版社", "出版日期", "类型"};
         Object[][] data = {}; // 初始空数据

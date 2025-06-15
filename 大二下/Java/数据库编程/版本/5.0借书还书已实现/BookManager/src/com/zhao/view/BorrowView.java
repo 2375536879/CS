@@ -6,11 +6,12 @@ import com.zhao.po.Book;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.List;
 
 public class BorrowView extends JFrame {
     private JTable bookTable;
-    private DefaultTableModel tableModel;
     private JTextField readerIdField;
     private JTextField isbnField;
     private JButton borrowButton;
@@ -20,64 +21,77 @@ public class BorrowView extends JFrame {
   //  private int currentReaderId;
 
 
+    public static void main(String[] args) {
+        BorrowView borrowView=new BorrowView();
+        borrowView.createFrame();
+    }
+
     public void createFrame() {
         recordService = new RecordService();
         setTitle("借阅管理");
-        setBounds(550,400,800, 600);
+        setBounds(550, 400, 600, 200); // 调整高度为200，去除多余空白
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // 创建主面板
+        // 主面板
         JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // 添加外边距
 
-        // 初始化表格模型与表格
-        String[] columnNames = {"ISBN", "书名", "作者", "出版社", "版次", "出版日期", "类型"};
-        tableModel = new DefaultTableModel(columnNames, 0);
-        bookTable = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(bookTable);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
-
-
-        // 操作面板
-        JPanel operationPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        // 输入区域
+        JPanel northPanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); // 左对齐排列
         readerIdField = new JTextField("请输入读者ID", 15);
-        // 添加焦点监听器
-        readerIdField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                JTextField textField = (JTextField) evt.getComponent();
-                if (textField.getText().equals("请输入读者ID")) {
-                    textField.setText(""); // 清空提示文字
-                }
-            }
-
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                JTextField textField = (JTextField) evt.getComponent();
-                if (textField.getText().isEmpty()) {
-                    textField.setText("请输入读者ID"); // 恢复提示文字
-                }
-            }
-        });
-
-      //  this.currentReaderId=Integer.valueOf(readerIdField.getText());
-
         isbnField = new JTextField(15);
+
+        // 添加提示文字处理
+        setupPlaceholder(readerIdField, "请输入读者ID");
+        setupPlaceholder(isbnField, "请输入ISBN");
+
+        northPanel.add(new JLabel("读者ID:"));
+        northPanel.add(readerIdField);
+        northPanel.add(new JLabel("ISBN:"));
+        northPanel.add(isbnField);
+
+        // 按钮区域
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         borrowButton = new JButton("借阅");
         returnButton = new JButton("归还");
 
-        operationPanel.add(new JLabel("读者ID:"));
-        operationPanel.add(readerIdField);
-        operationPanel.add(new JLabel("ISBN:"));
-        operationPanel.add(isbnField);
-        operationPanel.add(borrowButton);
-        operationPanel.add(returnButton);
+        buttonPanel.add(borrowButton);
+        buttonPanel.add(returnButton);
 
-        mainPanel.add(operationPanel, BorderLayout.SOUTH);
+        // 组合输入区和按钮区
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.add(buttonPanel);
 
-        // 添加事件监听
+        // 加入主面板
+        mainPanel.add(northPanel, BorderLayout.PAGE_START); // 靠顶部显示
+        mainPanel.add(centerPanel, BorderLayout.CENTER);    // 按钮居中显示
+
+        // 事件监听
         borrowButton.addActionListener(e -> handleBorrow());
         returnButton.addActionListener(e -> handleReturn());
 
-        this.add(mainPanel);
+        add(mainPanel);
+        pack(); // 自动调整窗口大小以适应内容
         setVisible(true);
+    }
+
+    private void setupPlaceholder(JTextField field, String placeholder) {
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                }
+            }
+        });
     }
 
     private void handleBorrow() {
@@ -119,21 +133,7 @@ public class BorrowView extends JFrame {
         JOptionPane.showMessageDialog(this, message, "输入错误", JOptionPane.WARNING_MESSAGE);
     }
 
-    public void setBookList(List<Book> books) {
-        tableModel.setRowCount(0);
-        for (Book book : books) {
-            Object[] row = {
-                    book.getISBN(),
-                    book.getTitle(),
-                    book.getAuthors(),
-                    book.getPublisher(),
-                    book.getEditionNumber(),
-                    book.getPublicationDate(),
-                    book.getType()
-            };
-            tableModel.addRow(row);
-        }
-    }
+
 
     private void refreshBookList() {
 //        List<Book> books = recordService.getAvailableBooks();
