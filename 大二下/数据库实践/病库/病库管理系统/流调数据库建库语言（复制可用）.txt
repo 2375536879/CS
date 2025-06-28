@@ -1,0 +1,184 @@
+-- III. 流调数据库 (Epidemiological Survey Database)
+
+-- Table 1: survey_participants (流调参与者)
+CREATE TABLE `survey_participants` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `patient_id` INT COMMENT 'FK to patients.id, nullable',
+  `survey_identifier` VARCHAR(100) COMMENT '调查编号',
+  `survey_date` DATE COMMENT '调查时间',
+  `name` VARCHAR(255) COMMENT '姓名',
+  `gender` ENUM('男', '女', '其他') COMMENT '性别',
+  `age_at_survey` INT COMMENT '年龄',
+  `residence_type` ENUM('城市', '农村') COMMENT '居住地类型',
+  `residence_duration_years` INT COMMENT '居住时长（年）',
+  `home_address_survey` TEXT COMMENT '家庭住址',
+  `height_cm_survey` DECIMAL(5,2) COMMENT '身高',
+  `weight_kg_survey` DECIMAL(5,2) COMMENT '体重',
+  `has_previous_allergy_history` TINYINT(1) COMMENT '既往过敏史：有/无',
+  `previous_allergic_rhinitis` TINYINT(1) COMMENT '既往:过敏性鼻炎',
+  `previous_bronchial_asthma` TINYINT(1) COMMENT '既往:支气管哮喘',
+  `previous_atopic_dermatitis` TINYINT(1) COMMENT '既往:特应性皮炎',
+  `previous_allergic_conjunctivitis` TINYINT(1) COMMENT '既往:过敏性结膜炎',
+  `previous_urticaria` TINYINT(1) COMMENT '既往:荨麻疹',
+  `current_survey_diag_ar` TINYINT(1) COMMENT '本次调查诊断:过敏性鼻炎',
+  `current_survey_diag_ba` TINYINT(1) COMMENT '本次调查诊断:支气管哮喘',
+  `current_survey_diag_ad` TINYINT(1) COMMENT '本次调查诊断:特应性皮炎',
+  `current_survey_diag_ac` TINYINT(1) COMMENT '本次调查诊断:过敏性结膜炎',
+  `current_survey_diag_urticaria` TINYINT(1) COMMENT '本次调查诊断:荨麻疹',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_survey_identifier` (`survey_identifier`),
+  FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='流调参与者';
+
+-- Table 2: survey_investigators (流调员信息)
+CREATE TABLE `survey_investigators` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `survey_participant_id` INT NOT NULL COMMENT 'FK to survey_participants.id',
+  `investigator_name` VARCHAR(255) COMMENT '姓名',
+  `investigator_title` ENUM('住院医师', '主治医师', '副主任医师', '主任医师') COMMENT '职称',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`survey_participant_id`) REFERENCES `survey_participants`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='流调员信息';
+
+-- Table 3: home_environment_exposure (家庭环境暴露信息)
+CREATE TABLE `home_environment_exposure` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `survey_participant_id` INT NOT NULL COMMENT 'FK to survey_participants.id',
+  `housing_type` ENUM('平房', '楼房', '别墅', '其他') COMMENT '房屋类型',
+  `building_material` ENUM('木质', '混凝土', '其他') COMMENT '建筑材料',
+  `ventilation_frequency` ENUM('每日', '每周', '偶尔') COMMENT '通风频率',
+  `ac_usage_season` ENUM('几乎不用', '夏季每日', '全年高频') COMMENT '空调使用季节',
+  `ac_usage_frequency` ENUM('每日', '每周3-5天', '偶尔') COMMENT '空调使用频率',
+  `ac_temp_setting` ENUM('<24℃', '24-26℃', '>26℃') COMMENT '空调温度设定',
+  `ac_mode` ENUM('制冷', '制热', '通风', '除湿') COMMENT '空调模式',
+  `ac_filter_clean_freq` ENUM('每月', '每季度', '每年', '从未清洁') COMMENT '空调滤网清洁频率',
+  `heating_type` ENUM('集中供暖', '电暖器', '燃气壁挂炉', '其他') COMMENT '暖气类型',
+  `heating_room_temp_range` ENUM('<18℃', '18-22℃', '>22℃') COMMENT '室温范围',
+  `has_carpet` TINYINT(1) COMMENT '地毯：有/无',
+  `has_plush_toys` TINYINT(1) COMMENT '毛绒玩具：有/无',
+  `home_pm25_avg_concentration` DECIMAL(10,2) COMMENT 'PM2.5家庭室内年均浓度 μg/m³',
+  `home_pollen_types_concentration` TEXT COMMENT '室内花粉种类及浓度',
+  `home_formaldehyde_concentration` DECIMAL(10,2) COMMENT '室内甲醛浓度 mg/m³',
+  `home_formaldehyde_detection_time` DATETIME COMMENT '甲醛检测时间',
+  `home_dust_mite_concentration` VARCHAR(255) COMMENT '床垫/沙发尘螨浓度 个/g灰尘',
+  `home_other_allergens` TEXT COMMENT '其他（霉菌、宠物皮屑、蟑螂过敏原等）',
+  `exercise_freq_intensity` VARCHAR(255) COMMENT '运动频率与强度',
+  `swimming_habit` TINYINT(1) COMMENT '游泳有/无',
+  `sleep_quality_duration` VARCHAR(255) COMMENT '睡眠质量与时长',
+  `has_insomnia` TINYINT(1) COMMENT '失眠：有/无',
+  `has_circadian_rhythm_disorder` TINYINT(1) COMMENT '昼夜节律紊乱：有/无',
+  `smoking_alcohol_e_cigarette_use` ENUM('主动', '被动暴露', '无') COMMENT '吸烟/饮酒/电子烟使用情况',
+  `cleaning_frequency` ENUM('每日', '每周', '每月') COMMENT '清洁频率',
+  `pet_cat` TINYINT(1) COMMENT '宠物饲养：猫',
+  `pet_dog` TINYINT(1) COMMENT '宠物饲养：狗',
+  `pet_bird` TINYINT(1) COMMENT '宠物饲养：鸟',
+  `pet_other` VARCHAR(255) COMMENT '宠物饲养：其它',
+  `pet_quantity` INT COMMENT '宠物数量',
+  `cohabiting_smoker` TINYINT(1) COMMENT '吸烟者同居情况：有/无',
+  `cooking_fuel_type` ENUM('天燃气', '煤气', '生物质燃料') COMMENT '烹饪燃料',
+  `uses_air_purifier` TINYINT(1) COMMENT '空气净化器使用：是/否',
+  `uses_vacuum_cleaner` TINYINT(1) COMMENT '吸尘器使用：是/否',
+  `allergen_avoidance_execution` ENUM('优', '良', '差') COMMENT '过敏原回避措施执行情况',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`survey_participant_id`) REFERENCES `survey_participants`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='家庭环境暴露信息';
+
+-- Table 4: work_study_environment_exposure (学习/工作环境信息)
+CREATE TABLE `work_study_environment_exposure` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `survey_participant_id` INT NOT NULL COMMENT 'FK to survey_participants.id',
+  `location_type` ENUM('城市中心', '郊区', '农村') COMMENT '学校/单位位置',
+  `room_ventilation_status` ENUM('良好', '一般', '差') COMMENT '教室/办公室通风情况',
+  `pm25_exposure_annual_avg` DECIMAL(10,2) COMMENT 'PM2.5暴露水平年均值 μg/m³',
+  `pollen_exposure_peak_concentration` VARCHAR(255) COMMENT '花粉暴露季节性峰值浓度 颗粒/m³',
+  `pollen_types_work_study` TEXT COMMENT '花粉种类',
+  `formaldehyde_new_decor_value` VARCHAR(255) COMMENT '新装修教室/办公室甲醛检测值',
+  `dust_mite_exposure_carpet` TINYINT(1) COMMENT '尘螨暴露:地毯有/无',
+  `dust_mite_exposure_fabric_furniture` TINYINT(1) COMMENT '布艺家具使用情况：有/无',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`survey_participant_id`) REFERENCES `survey_participants`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学习/工作环境信息';
+
+-- Table 5: urban_rural_environment_monitoring (城乡环境监测数据)
+CREATE TABLE `urban_rural_environment_monitoring` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `survey_participant_id` INT NOT NULL COMMENT 'FK to survey_participants.id',
+  `monitoring_location_type` ENUM('城市', '农村') COMMENT '监测地点类型',
+  `city_pm25_annual_avg_seasonal_change` TEXT COMMENT '城市PM2.5年均浓度、季节性变化',
+  `city_pollen_main_types_monthly_dist_peak` TEXT COMMENT '城市花粉主要种类、月度分布、峰值浓度',
+  `city_other_pollutants` TEXT COMMENT '城市其他污染物 NO₂, SO₂, 臭氧等',
+  `city_monitoring_point_location` ENUM('交通区', '工业区', '居民区') COMMENT '城市监测点位置',
+  `rural_pm25_straw_burning_annual_avg` TEXT COMMENT '农村PM2.5秸秆焚烧期浓度、年均值',
+  `rural_pollen_crop_related` TEXT COMMENT '农村农作物相关花粉',
+  `rural_biomass_fuel_indoor_pollution` TINYINT(1) COMMENT '农村生物质燃料使用导致的室内污染：有/无',
+  `drinking_water_source_type` ENUM('自来水', '纯净水', '井水', '其他') COMMENT '饮用水源类型',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`survey_participant_id`) REFERENCES `survey_participants`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='城乡环境监测数据';
+
+-- Table 6: family_history_survey (家族史 - 流调)
+CREATE TABLE `family_history_survey` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `survey_participant_id` INT NOT NULL COMMENT 'FK to survey_participants.id',
+  `relative_degree` ENUM('一级', '二级') COMMENT '亲属级别',
+  `relative_relationship` VARCHAR(100) COMMENT '关系',
+  `disease_asthma` TINYINT(1) COMMENT '疾病名称：哮喘',
+  `disease_eczema` TINYINT(1) COMMENT '疾病名称：湿疹',
+  `disease_rhinitis` TINYINT(1) COMMENT '疾病名称：鼻炎',
+  `disease_food_allergy` TINYINT(1) COMMENT '疾病名称：食物过敏',
+  `family_env_similarity_smoking` TINYINT(1) COMMENT '家族环境居住相似性：共同暴露因素：吸烟有/无',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`survey_participant_id`) REFERENCES `survey_participants`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='家族史 - 流调';
+
+-- Table 7: potential_confounding_factors (其他潜在混杂因素)
+CREATE TABLE `potential_confounding_factors` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `survey_participant_id` INT NOT NULL COMMENT 'FK to survey_participants.id',
+  `dietary_habits` ENUM('高加工食品', '传统饮食') COMMENT '饮食习惯',
+  `vitamin_d_daily_iu` INT COMMENT '维生素D每日剂量 IU',
+  `vitamin_d_duration_years` INT COMMENT '维生素D口服周期（年）',
+  `omega3_intake_level` VARCHAR(100) COMMENT 'Omega-3脂肪酸摄入量',
+  `long_term_stress_level_pss10` VARCHAR(50) COMMENT '长期压力水平 PSS-10评分',
+  `anxiety_depression_phq9_gad7` VARCHAR(50) COMMENT '焦虑或抑郁状态 PHQ-9/GAD-7评分',
+  `vaccination_history_on_schedule` TINYINT(1) COMMENT '疫苗接种史：按计划接种 是/否',
+  `antibiotic_use_frequency` ENUM('每月', '每季度', '每年', '几乎不用') COMMENT '抗生素使用频率',
+  `early_life_breastfeeding` TINYINT(1) COMMENT '母乳喂养：是/否',
+  `early_life_breastfeeding_months` INT COMMENT '母乳喂养具体月数',
+  `early_life_delivery_mode` ENUM('自然分娩', '剖宫产') COMMENT '分娩情况',
+  `early_life_pet_contact_age` ENUM('婴儿期', '幼儿期', '学龄前期', '学龄期', '无') COMMENT '宠物接触年龄',
+  `early_life_farm_exposure` TINYINT(1) COMMENT '农场环境暴露：有/无',
+  `early_life_farm_exposure_months` INT COMMENT '农场环境暴露具体月数',
+  `disease_burden_absenteeism_days_per_year` INT COMMENT '因过敏导致的缺勤或缺课天数/年',
+  `disease_burden_medical_costs_per_year` DECIMAL(10,2) COMMENT '医疗费用支出：年人均',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`survey_participant_id`) REFERENCES `survey_participants`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='其他潜在混杂因素';
+
+-- Table 8: environmental_monitoring_methods_survey (环境监测方法 - 流调)
+CREATE TABLE `environmental_monitoring_methods_survey` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `survey_participant_id` INT NOT NULL COMMENT 'FK to survey_participants.id',
+  `pm25_detector_model` VARCHAR(255) COMMENT 'PM2.5检测仪型号',
+  `pollen_sampling_method` ENUM('重力沉降法', '体积采样法', '分子检测') COMMENT '花粉采样方法',
+  `dust_mite_detection_method` ENUM('过敏原蛋白检测法', '显微镜直接计数法', 'PCR分子检测法', '尘螨代谢产物检测法', '空气采样法') COMMENT '尘螨检测方法',
+  `environmental_sensor_technology_notes` TEXT COMMENT '环境传感器技术备注',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`survey_participant_id`) REFERENCES `survey_participants`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='环境监测方法 - 流调';

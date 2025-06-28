@@ -1,0 +1,292 @@
+-- I. 临床数据库 (Clinical Database)
+
+-- Table 1: patients (患者基本信息)
+CREATE TABLE `patients` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `hospital_patient_id` VARCHAR(255) NOT NULL COMMENT '就诊号',
+  `name` VARCHAR(255) NOT NULL COMMENT '姓名',
+  `gender` ENUM('男', '女', '其他') COMMENT '性别',
+  `date_of_birth` DATE COMMENT '出生日期',
+  `home_address` TEXT COMMENT '家庭住址',
+  `birth_weight_kg` DECIMAL(5,3) COMMENT '出生体重 kg',
+  `lifestyle_notes` TEXT COMMENT '生活方式备注',
+  `positive_food_allergen_history` TEXT COMMENT '食物过敏原阳性史',
+  `positive_inhaled_allergen_history` TEXT COMMENT '吸入过敏原阳性史',
+  `allergic_disease_history` TEXT COMMENT '过敏性疾病史',
+  `family_allergy_history_degree1` TEXT COMMENT '一代亲属过敏史',
+  `family_allergic_disease_history_degree1` TEXT COMMENT '一代亲属过敏性疾病史',
+  `family_allergy_history_degree2` TEXT COMMENT '二代亲属过敏史',
+  `family_allergic_disease_history_degree2` TEXT COMMENT '二代亲属过敏性疾病史',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hospital_patient_id` (`hospital_patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='患者基本信息';
+
+-- Table 2: patient_contacts (患者联系人)
+CREATE TABLE `patient_contacts` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `patient_id` INT NOT NULL COMMENT 'FK to patients.id',
+  `contact_name` VARCHAR(255) COMMENT '姓名',
+  `contact_phone` VARCHAR(50) COMMENT '联系方式',
+  `relationship` VARCHAR(100) COMMENT '与患者关系',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='患者联系人';
+
+-- Table 3: insurance_details (医保情况)
+CREATE TABLE `insurance_details` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `patient_id` INT NOT NULL COMMENT 'FK to patients.id',
+  `insurance_type` VARCHAR(255) COMMENT '医保类型',
+  `insurance_number` VARCHAR(255) COMMENT '医保号',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='医保情况';
+
+-- Table 4: clinical_visits (就诊记录)
+CREATE TABLE `clinical_visits` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `patient_id` INT NOT NULL COMMENT 'FK to patients.id',
+  `visit_date` DATETIME COMMENT '就诊时间',
+  `height_cm` DECIMAL(5,2) COMMENT '身高 cm',
+  `weight_kg` DECIMAL(5,2) COMMENT '体重 kg',
+  `healthcare_provider_name` VARCHAR(255) COMMENT '医疗服务者姓名',
+  `healthcare_provider_title` VARCHAR(255) COMMENT '医疗服务者职称',
+  `institution_name` VARCHAR(255) COMMENT '机构名称',
+  `institution_address` TEXT COMMENT '机构地址',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='就诊记录';
+
+-- Table 5: visit_symptoms_signs (症状及体征 - per visit)
+CREATE TABLE `visit_symptoms_signs` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `symptom_description` TEXT COMMENT '症状描述',
+  `asthma_wheezing` TINYINT(1) DEFAULT NULL COMMENT '哮喘:喘息',
+  `asthma_coughing` TINYINT(1) DEFAULT NULL COMMENT '哮喘:咳嗽',
+  `asthma_dyspnea` TINYINT(1) DEFAULT NULL COMMENT '哮喘:呼吸困难',
+  `asthma_activity_limitation` TINYINT(1) DEFAULT NULL COMMENT '哮喘:活动受限',
+  `asthma_night_awakening` TINYINT(1) DEFAULT NULL COMMENT '哮喘:夜间觉醒',
+  `asthma_chest_tightness` TINYINT(1) DEFAULT NULL COMMENT '哮喘:胸闷',
+  `asthma_night_morning_symptoms` TINYINT(1) DEFAULT NULL COMMENT '哮喘:夜间或晨间症状加重',
+  `asthma_triggers` TEXT COMMENT '哮喘:触发因素',
+  `ar_clear_nasal_discharge` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:清水样鼻涕',
+  `ar_nasal_itching` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:鼻痒',
+  `ar_nasal_congestion` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:鼻塞',
+  `ar_paroxysmal_sneezing` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:阵发性喷嚏',
+  `ar_olfactory_decline` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:嗅觉减退',
+  `ar_throat_clearing` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:清咽喉',
+  `ar_sniffing` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:吸鼻子',
+  `ar_irritative_dry_cough` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:刺激性干咳',
+  `ar_globus_sensation` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:咽异物感',
+  `ar_eye_itching` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:眼痒',
+  `ar_blinking` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:眨眼',
+  `ar_sleep_disturbance` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:睡眠障碍',
+  `ar_daily_activity_limitation` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:日常活动受限',
+  `ar_school_work_performance_decline` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎:在校表现变差或工作能力下降',
+  `ad_chronic_recurrent_pruritic_rash` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:慢性复发性瘙痒性皮疹',
+  `ad_flexural_or_facial_dermatitis_history` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:有屈侧或面颊部皮炎史',
+  `ad_dry_skin` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:皮肤干燥',
+  `ad_xerosis` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:干皮症',
+  `ad_retroauricular_fissures` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:耳根裂纹',
+  `ad_ichthyosis` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:鱼鳞病',
+  `ad_palmar_hyperlinearity` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:掌纹症',
+  `ad_keratosis_pilaris` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:毛周角化症',
+  `ad_skin_infection_tendency` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:有皮肤感染倾向',
+  `ad_dennie_morgan_infraorbital_fold` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:旦尼-莫根眶下褶痕',
+  `ad_periorbital_darkening` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:眶周黑晕',
+  `ad_facial_pallor` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:苍白脸',
+  `ad_pityriasis_alba` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:白色糠疹',
+  `ad_anterior_neck_folds` TINYINT(1) DEFAULT NULL COMMENT '湿疹/AD:颈前皱褶',
+  `symptom_severity` VARCHAR(100) COMMENT '严重程度',
+  `symptom_frequency` VARCHAR(255) COMMENT '症状频率',
+  `symptom_start_date` DATE COMMENT '症状开始时间',
+  `symptom_triggers_general` TEXT COMMENT '诱因',
+  `sign_description` TEXT COMMENT '体征描述',
+  `ar_nasal_mucosa_swelling` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎体征:鼻腔黏膜肿胀',
+  `ar_nasal_mucosa_pale_or_congested` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎体征:鼻腔黏膜色苍白或充血',
+  `ar_nasal_discharge_observed` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎体征:有鼻道分泌物',
+  `ar_turbinate_hypertrophy` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎体征:鼻甲肥大',
+  `ar_allergic_shiners` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎体征:黑眼圈',
+  `ar_allergic_salute` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎体征:“过敏性敬礼”',
+  `ar_allergic_crease` TINYINT(1) DEFAULT NULL COMMENT '过敏性鼻炎体征:“过敏性鼻皱褶”',
+  `asthma_auscultation_wheezing` TINYINT(1) DEFAULT NULL COMMENT '哮喘体征:听诊闻哮鸣音',
+  `environmental_factors_notes` TEXT COMMENT '环境因素',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='症状及体征';
+
+-- Table 6: lab_examinations (实验室检查)
+CREATE TABLE `lab_examinations` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `examination_name` VARCHAR(255) COMMENT '检查项目名称',
+  `examination_date` DATE COMMENT '检查日期',
+  `examination_value` VARCHAR(255) COMMENT '检查值',
+  `examination_unit` VARCHAR(50) COMMENT '检查单位',
+  `reference_range` VARCHAR(100) COMMENT '参考范围',
+  `notes` TEXT COMMENT '备注',
+  `allergy_skin_prick_test_details` TEXT COMMENT '皮肤点刺试验详情',
+  `allergy_serum_specific_ige_level` TEXT COMMENT '血清特异性IgE水平',
+  `allergy_serum_total_ige_level` TEXT COMMENT '血清总IgE水平',
+  `allergy_peripheral_eosinophil_count` TEXT COMMENT '外周血嗜酸性粒细胞计数',
+  `asthma_chest_xray_findings` TEXT COMMENT '哮喘专项:胸部X线检查结果',
+  `asthma_feno_test_value` VARCHAR(50) COMMENT '哮喘专项:呼出气一氧化氮测试值',
+  `asthma_bronchodilator_response_test_result` VARCHAR(255) COMMENT '哮喘专项:支气管舒张试验结果',
+  `asthma_pef_variability_rate` VARCHAR(50) COMMENT '哮喘专项:呼气峰值流量变异率',
+  `asthma_exercise_challenge_test_result` VARCHAR(255) COMMENT '哮喘专项:锻炼激发试验结果',
+  `asthma_bronchial_challenge_test_result` VARCHAR(255) COMMENT '哮喘专项:支气管激发试验结果',
+  `ar_nasal_mucosal_challenge_test_result` VARCHAR(255) COMMENT '过敏性鼻炎专项:鼻黏膜激发试验结果',
+  `ar_regulatory_t_cell_count` VARCHAR(50) COMMENT '过敏性鼻炎专项:调节性T细胞计数',
+  `ar_igg4_level` VARCHAR(50) COMMENT '过敏性鼻炎专项:免疫球蛋白G4水平',
+  `ar_th1_cell_count` VARCHAR(50) COMMENT '过敏性鼻炎专项:辅助性T细胞1计数',
+  `ar_th2_cell_count` VARCHAR(50) COMMENT '过敏性鼻炎专项:辅助性T细胞2计数',
+  `ar_eosinophil_cationic_protein_level` VARCHAR(50) COMMENT '过敏性鼻炎专项:嗜酸性粒细胞阳离子蛋白水平',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='实验室检查';
+
+-- Table 7: pulmonary_function_tests (肺功能检查)
+CREATE TABLE `pulmonary_function_tests` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `test_name` VARCHAR(255) COMMENT '检查名称',
+  `test_date` DATE COMMENT '检查日期',
+  `fev1_value` DECIMAL(5,2) COMMENT 'FEV1值',
+  `fvc_value` DECIMAL(5,2) COMMENT 'FVC值',
+  `fev1_fvc_ratio` DECIMAL(5,2) COMMENT 'FEV1/FVC比率',
+  `report_details` TEXT COMMENT '检查报告/完整值',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='肺功能检查';
+
+-- Table 8: exhaled_nitric_oxide_tests (呼出气一氧化氮检测)
+CREATE TABLE `exhaled_nitric_oxide_tests` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `test_name` VARCHAR(255) COMMENT '检查名称',
+  `test_date` DATE COMMENT '检查日期',
+  `feno_value_ppb` INT COMMENT '检测值 ppb',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='呼出气一氧化氮检测';
+
+-- Table 9: imaging_studies (影像学检查)
+CREATE TABLE `imaging_studies` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `study_name` VARCHAR(255) COMMENT '影像学检查名称',
+  `study_date` DATE COMMENT '检查日期',
+  `report_summary` TEXT COMMENT '检查报告摘要',
+  `image_path_or_identifier` VARCHAR(255) COMMENT '影像存档路径或标识符',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='影像学检查';
+
+-- Table 10: diagnoses (疾病诊断)
+CREATE TABLE `diagnoses` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `disease_name` VARCHAR(255) COMMENT '疾病名称',
+  `icd_11_code` VARCHAR(50) COMMENT 'ICD-11编码',
+  `severity` VARCHAR(100) COMMENT '严重程度',
+  `diagnosis_date` DATE COMMENT '诊断时间',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='疾病诊断';
+
+-- Table 11: medications (用药记录)
+CREATE TABLE `medications` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `drug_name` VARCHAR(255) COMMENT '药物名称',
+  `drug_specification` VARCHAR(255) COMMENT '药物规格',
+  `dosage_per_administration` VARCHAR(100) COMMENT '一次药物的使用剂量',
+  `drug_use_days` INT COMMENT '药物使用天数',
+  `administration_frequency` VARCHAR(100) COMMENT '给药频率',
+  `administration_route` VARCHAR(100) COMMENT '给药途径',
+  `administration_site` VARCHAR(100) COMMENT '给药部位',
+  `treatment_start_date` DATE COMMENT '治疗开始时间',
+  `treatment_end_date` DATE COMMENT '治疗终止时间',
+  `medication_guidance` TEXT COMMENT '用药指导',
+  `medication_precautions` TEXT COMMENT '用药注意事项',
+  `is_ics` TINYINT(1) DEFAULT NULL COMMENT '哮喘:吸入性糖皮质激素',
+  `is_laba` TINYINT(1) DEFAULT NULL COMMENT '哮喘:长效β2受体激动剂',
+  `is_ltra` TINYINT(1) DEFAULT NULL COMMENT '哮喘/鼻炎:白三烯受体拮抗剂',
+  `is_theophylline` TINYINT(1) DEFAULT NULL COMMENT '哮喘:茶碱',
+  `is_saba` TINYINT(1) DEFAULT NULL COMMENT '哮喘:短效β2受体激动剂',
+  `is_antihistamine` TINYINT(1) DEFAULT NULL COMMENT '鼻炎/食物过敏:抗组胺药',
+  `is_corticosteroid_nasal_oral` TINYINT(1) DEFAULT NULL COMMENT '鼻炎:糖皮质激素',
+  `is_mast_cell_stabilizer` TINYINT(1) DEFAULT NULL COMMENT '鼻炎:肥大细胞膜稳定剂',
+  `is_anticholinergic` TINYINT(1) DEFAULT NULL COMMENT '鼻炎:抗胆碱能药',
+  `is_topical_corticosteroid` TINYINT(1) DEFAULT NULL COMMENT '湿疹:外用糖皮质激素',
+  `is_calcineurin_inhibitor` TINYINT(1) DEFAULT NULL COMMENT '湿疹:钙调神经磷酸酶抑制剂',
+  `is_food_allergy_corticosteroid` TINYINT(1) DEFAULT NULL COMMENT '食物过敏:糖皮质激素',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用药记录';
+
+-- Table 12: past_medication_history (既往用药史 - patient level)
+CREATE TABLE `past_medication_history` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `patient_id` INT NOT NULL COMMENT 'FK to patients.id',
+  `drug_name` VARCHAR(255) COMMENT '药物名称',
+  `drug_use_days` INT COMMENT '药物使用天数',
+  `reason_for_use` TEXT COMMENT '使用原因',
+  `approximate_start_date` DATE COMMENT '大致开始日期',
+  `approximate_end_date` DATE COMMENT '大致结束日期',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='既往用药史';
+
+-- Table 13: other_auxiliary_treatments (其他辅助治疗)
+CREATE TABLE `other_auxiliary_treatments` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `treatment_method` VARCHAR(255) COMMENT '治疗方法',
+  `start_date` DATE COMMENT '开始时间',
+  `end_date` DATE COMMENT '终止时间',
+  `precautions` TEXT COMMENT '注意事项',
+  `is_allergen_specific_immunotherapy` TINYINT(1) DEFAULT NULL COMMENT '过敏原特异性免疫治疗',
+  `is_anti_ige_antibody_therapy` TINYINT(1) DEFAULT NULL COMMENT '抗免疫球蛋白E抗体治疗',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='其他辅助治疗';
+
+-- Table 14: medical_costs (费用)
+CREATE TABLE `medical_costs` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `visit_id` INT NOT NULL COMMENT 'FK to clinical_visits.id',
+  `cost_category` VARCHAR(255) COMMENT '费用类别',
+  `cost_amount` DECIMAL(10,2) COMMENT '费用金额',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`visit_id`) REFERENCES `clinical_visits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='费用';
